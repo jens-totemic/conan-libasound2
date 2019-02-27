@@ -60,15 +60,12 @@ class DebianDependencyConan(ConanFile):
     def package(self):
         self.copy("*", symlinks=True)
 
-    def copy_cleaned(self, source, prefix_remove, dest, prefix_add, suffix_to_duplicate, excludes):
+    def copy_cleaned(self, source, prefix_remove, dest):
         for e in source:
             if (e.startswith(prefix_remove)):
                 entry = e[len(prefix_remove):]
-                full_entry = prefix_add+entry
-                if len(entry) > 0 and not full_entry in dest and not full_entry in excludes:
-                    dest.append(full_entry)
-                    if (suffix_to_duplicate and full_entry.endswith(suffix_to_duplicate)):
-                        dest.append(full_entry[:-len(suffix_to_duplicate)])
+                if len(entry) > 0 and not entry in dest:
+                    dest.append(entry)
 
     def package_info(self):
         # we only need the autotool class to generate the host variable
@@ -81,16 +78,14 @@ class DebianDependencyConan(ConanFile):
         pkgconfigpath = os.path.join(self.package_folder, pkgpath)
         self.output.info("package info file: " + pkgconfigpath)
         with tools.environment_append({'PKG_CONFIG_PATH': pkgconfigpath}):
-            pkg_config = tools.PkgConfig("alsa")
-            # The entries in the package file are not including the absolute path, add it here
-            self.copy_cleaned(pkg_config.libs_only_L, "-L", self.cpp_info.lib_paths, self.package_folder, None, [])
+            pkg_config = tools.PkgConfig("alsa", variables={ "prefix" : self.package_folder + "/usr" } )
+
+            self.copy_cleaned(pkg_config.libs_only_L, "-L", self.cpp_info.lib_paths)
             self.output.info("lib_paths %s" % self.cpp_info.lib_paths)
 
             # exclude all libraries from dependencies here, they are separately included
-            self.copy_cleaned(pkg_config.libs_only_l, "-l", self.cpp_info.libs, "", None, [])
+            self.copy_cleaned(pkg_config.libs_only_l, "-l", self.cpp_info.libs)
             self.output.info("libs: %s" % self.cpp_info.libs)
 
-            # when creating include paths, we need to add an additional include directory that does not end on /alsa,
-            # so #include<alsa/version.h> works
-            self.copy_cleaned(pkg_config.cflags_only_I, "-I", self.cpp_info.include_paths, self.package_folder, "/alsa", [])
+            self.copy_cleaned(pkg_config.cflags_only_I, "-I", self.cpp_info.include_paths)
             self.output.info("include_paths: %s" % self.cpp_info.include_paths)
