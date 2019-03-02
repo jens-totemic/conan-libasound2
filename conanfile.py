@@ -7,12 +7,12 @@ from conans.tools import check_md5, check_sha256, check_sha1
 from conans.client.tools.oss import get_gnu_triplet
 
 class DebianDependencyConan(ConanFile):
-    name = "libasound2-dev"
+    name = "libasound2"
     version = "1.1.0"
     buildv =  "0ubuntu1" 
     homepage = "http://www.alsa-project.org/"
     description = "shared library for ALSA applications -- development files. This package contains files required for developing software that makes use of libasound2, the ALSA library."
-    url = "https://github.com/jens-totemic/conan-pjsip"    
+    url = "https://github.com/jens-totemic/conan-libasound2"    
     settings = "os", "arch"
 
     def translate_arch(self):
