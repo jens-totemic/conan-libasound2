@@ -9,8 +9,9 @@ from conans.client.tools.oss import get_gnu_triplet
 class DebianDependencyConan(ConanFile):
     name = "libasound2"
     version = "1.1.0"
-    buildv =  "0ubuntu1" 
-    homepage = "http://www.alsa-project.org/"
+    build_version = "0ubuntu1" 
+    homepage = "https://packages.ubuntu.com/xenial/libasound2"
+    # dev_url = https://packages.ubuntu.com/xenial/libasound2-dev
     description = "shared library for ALSA applications -- development files. This package contains files required for developing software that makes use of libasound2, the ALSA library."
     url = "https://github.com/jens-totemic/conan-libasound2"    
     settings = "os", "arch"
@@ -38,23 +39,28 @@ class DebianDependencyConan(ConanFile):
     def build(self):
         if self.settings.os == "Linux":
             if self.settings.arch == "x86_64":
-                
-                sha     = "936332b71b4cdb75e9d74e6e08c31fb6e70bfe4fad10f2c78fe33ba1efdd5e36"
+                # https://packages.ubuntu.com/xenial/amd64/libasound2/download
+                sha_lib = "936332b71b4cdb75e9d74e6e08c31fb6e70bfe4fad10f2c78fe33ba1efdd5e36"
+                # https://packages.ubuntu.com/xenial/amd64/libasound2-dev/download
                 sha_dev = "a219dc3e49a63938ed847c6adf15149851a21caa62848b22905dbd97e264d002"
+
+                url_lib = ("http://us.archive.ubuntu.com/ubuntu/pool/main/a/alsa-lib/libasound2_%s-%s_%s.deb"
+                   % (str(self.version), self.build_version, self.translate_arch()))
                 url_dev = ("http://us.archive.ubuntu.com/ubuntu/pool/main/a/alsa-lib/libasound2-dev_%s-%s_%s.deb"
-                   % (str(self.version), self.buildv, self.translate_arch()))
-                url = ("http://us.archive.ubuntu.com/ubuntu/pool/main/a/alsa-lib/libasound2_%s-%s_%s.deb"
-                   % (str(self.version), self.buildv, self.translate_arch()))
+                   % (str(self.version), self.build_version, self.translate_arch()))
             else:
-                sha     = "8aa152b840021ab3fbebe2d099a0106f226eec92551c36ce41d5d3310a059849"
+                # https://packages.ubuntu.com/xenial/armhf/libasound2/download
+                sha_lib = "8aa152b840021ab3fbebe2d099a0106f226eec92551c36ce41d5d3310a059849"
+                # https://packages.ubuntu.com/xenial/armhf/libasound2-dev/download
                 sha_dev = "736d846de5bfcac933c9f35ac47b1e5f128901856ffce08f8865e8dfc8a15966"
+
+                url_lib = ("http://ports.ubuntu.com/ubuntu-ports/pool/main/a/alsa-lib/libasound2_%s-%s_%s.deb"
+                   % (str(self.version), self.build_version, self.translate_arch()))
                 url_dev = ("http://ports.ubuntu.com/ubuntu-ports/pool/main/a/alsa-lib/libasound2-dev_%s-%s_%s.deb"
-                   % (str(self.version), self.buildv, self.translate_arch()))
-                url = ("http://ports.ubuntu.com/ubuntu-ports/pool/main/a/alsa-lib/libasound2_%s-%s_%s.deb"
-                   % (str(self.version), self.buildv, self.translate_arch()))
+                   % (str(self.version), self.build_version, self.translate_arch()))
         else:
             raise Exception("Binary does not exist for these settings")
-        self._download_extract_deb(url, sha)
+        self._download_extract_deb(url_lib, sha_lib)
         self._download_extract_deb(url_dev, sha_dev)
 
     def package(self):
