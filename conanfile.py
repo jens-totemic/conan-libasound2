@@ -1,9 +1,5 @@
 import os
-import stat
-import glob
-import shutil
-from conans import ConanFile, AutoToolsBuildEnvironment, tools, errors
-from conans.tools import check_md5, check_sha256, check_sha1
+from conans import ConanFile, AutoToolsBuildEnvironment, tools
 from conans.client.tools.oss import get_gnu_triplet
 
 class DebianDependencyConan(ConanFile):
@@ -14,6 +10,7 @@ class DebianDependencyConan(ConanFile):
     # dev_url = https://packages.ubuntu.com/xenial/libasound2-dev
     description = "shared library for ALSA applications -- development files. This package contains files required for developing software that makes use of libasound2, the ALSA library."
     url = "https://github.com/jens-totemic/conan-libasound2"    
+    license = "GNU Lesser General Public License"
     settings = "os", "arch"
 
     def translate_arch(self):
@@ -31,10 +28,18 @@ class DebianDependencyConan(ConanFile):
         tools.download(url, filename)
         tools.check_sha256(filename, sha256)
         # extract the payload from the debian file
-        self.run("ar -x %s %s" % (filename, deb_data_file)),
+        self.run("ar -x %s %s" % (filename, deb_data_file))
         os.unlink(filename)
         tools.unzip(deb_data_file)
         os.unlink(deb_data_file)
+
+    def triplet_name(self):
+        # we only need the autotool class to generate the host variable
+        autotools = AutoToolsBuildEnvironment(self)
+
+        # construct path using platform name, e.g. usr/lib/arm-linux-gnueabihf/pkgconfig
+        # if not cross-compiling it will be false. In that case, construct the name by hand
+        return autotools.host or get_gnu_triplet(str(self.settings.os), str(self.settings.arch), self.settings.get_safe("compiler"))
 
     def build(self):
         if self.settings.os == "Linux":
@@ -64,7 +69,9 @@ class DebianDependencyConan(ConanFile):
         self._download_extract_deb(url_dev, sha_dev)
 
     def package(self):
-        self.copy("*", symlinks=True)
+        self.copy(pattern="*", dst="lib", src="usr/lib/" + self.triplet_name(), symlinks=True)
+        self.copy(pattern="*", dst="include", src="usr/include", symlinks=True)
+        self.copy(pattern="copyright", src="usr/share/doc/" + self.name, symlinks=True)
 
     def copy_cleaned(self, source, prefix_remove, dest):
         for e in source:
@@ -74,17 +81,12 @@ class DebianDependencyConan(ConanFile):
                     dest.append(entry)
 
     def package_info(self):
-        # we only need the autotool class to generate the host variable
-        autotools = AutoToolsBuildEnvironment(self)
-
-        # construct path using platform name, e.g. usr/lib/arm-linux-gnueabihf/pkgconfig
-        # if not cross-compiling it will be false. In that case, construct the name by hand
-        triplet = autotools.host or get_gnu_triplet(str(self.settings.os), str(self.settings.arch), self.settings.get_safe("compiler"))
-        pkgpath = "usr/lib/%s/pkgconfig" % triplet
+        #pkgpath = "usr/lib/%s/pkgconfig" % self.triplet_name()
+        pkgpath =  "lib/pkgconfig"
         pkgconfigpath = os.path.join(self.package_folder, pkgpath)
         self.output.info("package info file: " + pkgconfigpath)
         with tools.environment_append({'PKG_CONFIG_PATH': pkgconfigpath}):
-            pkg_config = tools.PkgConfig("alsa", variables={ "prefix" : self.package_folder + "/usr" } )
+            pkg_config = tools.PkgConfig("alsa", variables={ "prefix" : self.package_folder } )
 
             self.copy_cleaned(pkg_config.libs_only_L, "-L", self.cpp_info.lib_paths)
             self.output.info("lib_paths %s" % self.cpp_info.lib_paths)
