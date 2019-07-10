@@ -18,6 +18,8 @@ class DebianDependencyConan(ConanFile):
         # ubuntu does not have v7 specific libraries
         if (arch_string) == "armv7hf":
             return "armhf"
+        elif (arch_string) == "armv8":
+            return "arm64"
         elif (arch_string) == "x86_64":
             return "amd64"
         return arch_string
@@ -53,7 +55,17 @@ class DebianDependencyConan(ConanFile):
                    % (str(self.version), self.build_version, self.translate_arch()))
                 url_dev = ("http://us.archive.ubuntu.com/ubuntu/pool/main/a/alsa-lib/libasound2-dev_%s-%s_%s.deb"
                    % (str(self.version), self.build_version, self.translate_arch()))
-            else:
+            elif self.settings.arch == "armv8":
+                # https://packages.ubuntu.com/xenial/arm64/libasound2/download
+                sha_lib = "3bae618a255582a71d89f5d09281f4bf84f26cdf953bd0b09898c3a307e9b441"
+                # https://packages.ubuntu.com/xenial/arm64/libasound2-dev/download
+                sha_dev = "37385bca2d7bcc52de56dd96e5f1dbf409d2df1e9667f311dbe022a16bdc5117"
+
+                url_lib = ("http://ports.ubuntu.com/ubuntu-ports/pool/main/a/alsa-lib/libasound2_%s-%s_%s.deb"
+                   % (str(self.version), self.build_version, self.translate_arch()))
+                url_dev = ("http://ports.ubuntu.com/ubuntu-ports/pool/main/a/alsa-lib/libasound2-dev_%s-%s_%s.deb"
+                   % (str(self.version), self.build_version, self.translate_arch()))
+            else: # armv7hf
                 # https://packages.ubuntu.com/xenial/armhf/libasound2/download
                 sha_lib = "8aa152b840021ab3fbebe2d099a0106f226eec92551c36ce41d5d3310a059849"
                 # https://packages.ubuntu.com/xenial/armhf/libasound2-dev/download
