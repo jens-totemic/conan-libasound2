@@ -4,25 +4,25 @@ from conans.client.tools.oss import get_gnu_triplet
 
 class DebianDependencyConan(ConanFile):
     name = "libasound2"
-    version = "1.1.0"
-    build_version = "0ubuntu1" 
-    homepage = "https://packages.ubuntu.com/xenial/libasound2"
-    # dev_url = https://packages.ubuntu.com/xenial/libasound2-dev
+    version = "1.1.8"
+    build_version = "1" 
+    homepage = "https://packages.debian.org/buster/libasound2"
+    # dev_url = https://packages.debian.org/buster/libasound2-dev
     description = "shared library for ALSA applications -- development files. This package contains files required for developing software that makes use of libasound2, the ALSA library."
     url = "https://github.com/jens-totemic/conan-libasound2"    
     license = "GNU Lesser General Public License"
     settings = "os", "arch"
 
     def translate_arch(self):
-        arch_string = str(self.settings.arch)
-        # ubuntu does not have v7 specific libraries
-        if (arch_string) == "armv7hf":
-            return "armhf"
-        elif (arch_string) == "armv8":
-            return "arm64"
-        elif (arch_string) == "x86_64":
-            return "amd64"
-        return arch_string
+        arch_names = {"x86_64": "amd64",
+                        "x86": "i386",
+                        "ppc32": "powerpc",
+                        "ppc64le": "ppc64el",
+                        "armv7": "arm",
+                        "armv7hf": "armhf",
+                        "armv8": "arm64",
+                        "s390x": "s390x"}
+        return arch_names[str(self.settings.arch)]
         
     def _download_extract_deb(self, url, sha256):
         filename = "./download.deb"
@@ -46,24 +46,24 @@ class DebianDependencyConan(ConanFile):
     def build(self):
         if self.settings.os == "Linux":
             if self.settings.arch == "x86_64":
-                # https://packages.ubuntu.com/xenial/amd64/libasound2/download
-                sha_lib = "936332b71b4cdb75e9d74e6e08c31fb6e70bfe4fad10f2c78fe33ba1efdd5e36"
-                # https://packages.ubuntu.com/xenial/amd64/libasound2-dev/download
-                sha_dev = "a219dc3e49a63938ed847c6adf15149851a21caa62848b22905dbd97e264d002"
+                # https://packages.debian.org/buster/amd64/libasound2/download
+                sha_lib = "6cc281b4a6d1faffe4fc6d83ec71365c1af0ee6d7806fa122fef00f85a0dde62"
+                # https://packages.debian.org/buster/amd64/libasound2-dev/download
+                sha_dev = "efcae0522800ac0f32a72d7ac240375effde06473bb5aeabbe20d2d4057c185e"
 
-                url_lib = ("http://us.archive.ubuntu.com/ubuntu/pool/main/a/alsa-lib/libasound2_%s-%s_%s.deb"
+                url_lib = ("http://ftp.debian.org/debian/pool/main/a/alsa-lib/libasound2_%s-%s_%s.deb"
                    % (str(self.version), self.build_version, self.translate_arch()))
-                url_dev = ("http://us.archive.ubuntu.com/ubuntu/pool/main/a/alsa-lib/libasound2-dev_%s-%s_%s.deb"
+                url_dev = ("http://ftp.debian.org/debian/pool/main/a/alsa-lib/libasound2-dev_%s-%s_%s.deb"
                    % (str(self.version), self.build_version, self.translate_arch()))
             elif self.settings.arch == "armv8":
-                # https://packages.ubuntu.com/xenial/arm64/libasound2/download
-                sha_lib = "3bae618a255582a71d89f5d09281f4bf84f26cdf953bd0b09898c3a307e9b441"
-                # https://packages.ubuntu.com/xenial/arm64/libasound2-dev/download
-                sha_dev = "37385bca2d7bcc52de56dd96e5f1dbf409d2df1e9667f311dbe022a16bdc5117"
+                # https://packages.debian.org/buster/arm64/libasound2/download
+                sha_lib = "af663d07d10b085f590c539772dbf70b279df187210ea818446dfd896487adee"
+                # https://packages.debian.org/buster/arm64/libasound2-dev/download
+                sha_dev = "617ed035bd7caaab64c7f68e5b673bd60160eb536b9e7ca3c748cc9c46949ffe"
 
-                url_lib = ("http://ports.ubuntu.com/ubuntu-ports/pool/main/a/alsa-lib/libasound2_%s-%s_%s.deb"
+                url_lib = ("http://ftp.debian.org/debian/pool/main/a/alsa-lib/libasound2_%s-%s_%s.deb"
                    % (str(self.version), self.build_version, self.translate_arch()))
-                url_dev = ("http://ports.ubuntu.com/ubuntu-ports/pool/main/a/alsa-lib/libasound2-dev_%s-%s_%s.deb"
+                url_dev = ("http://ftp.debian.org/debian/pool/main/a/alsa-lib/libasound2-dev_%s-%s_%s.deb"
                    % (str(self.version), self.build_version, self.translate_arch()))
             else: # armv7hf
                 # https://packages.ubuntu.com/xenial/armhf/libasound2/download
